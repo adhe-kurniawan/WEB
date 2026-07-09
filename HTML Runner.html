@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>HTML Runner</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+* {
+  box-sizing: border-box;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+}
+
+body {
+  margin: 0;
+  background: #0f172a;
+  color: #e5e7eb;
+}
+
+header {
+  padding: 18px;
+  background: #020617;
+  border-bottom: 1px solid #1f2937;
+}
+
+header h1 {
+  margin: 0;
+  font-size: 20px;
+}
+
+main {
+  display: grid;
+  grid-template-columns: 1fr 1.5fr;
+  gap: 16px;
+  padding: 16px;
+}
+
+section {
+  background: #020617;
+  border-radius: 12px;
+  padding: 16px;
+  border: 1px solid #1f2937;
+}
+
+h2 {
+  margin-top: 0;
+  font-size: 16px;
+}
+
+textarea {
+  width: 100%;
+  min-height: 360px;
+  background: #020617;
+  color: #a7f3d0;
+  border: 1px solid #1f2937;
+  border-radius: 10px;
+  padding: 12px;
+  resize: vertical;
+  font-family: Consolas, monospace;
+  font-size: 14px;
+}
+
+.preview-wrapper {
+  width: 100%;
+  height: 520px;
+}
+
+iframe {
+  width: 100%;
+  height: 100%;
+  border-radius: 12px;
+  border: 1px solid #1f2937;
+  background: white;
+  transform-origin: top left;
+}
+
+.controls {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+button {
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: none;
+  background: #22c55e;
+  color: #022c22;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+button.secondary {
+  background: #334155;
+  color: #e5e7eb;
+}
+
+button:hover {
+  opacity: .9;
+}
+
+footer {
+  padding: 10px;
+  text-align: center;
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+@media (max-width: 900px) {
+  main {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>HTML File Runner</h1>
+</header>
+
+<main>
+
+<section>
+  <h2>Kode HTML</h2>
+  <textarea id="editor">
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Contoh</title>
+</head>
+<body>
+  <h1>Halo Dunia</h1>
+  <p>Ini preview HTML.</p>
+  <button onclick="alert('OK')">Klik</button>
+</body>
+</html>
+  </textarea>
+
+  <button onclick="runHTML()">▶ Jalankan</button>
+</section>
+
+<section>
+  <h2>Preview</h2>
+
+  <div class="controls">
+    <button class="secondary" onclick="zoomOut()">−</button>
+    <button class="secondary" onclick="zoomIn()">＋</button>
+    <button onclick="toggleFullscreen()">⛶ Fullscreen (ESC untuk keluar)</button>
+  </div>
+
+  <div class="preview-wrapper" id="previewWrapper">
+    <iframe id="preview"></iframe>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  HTML Runner • Offline • Siap Komersil
+</footer>
+
+<script>
+let zoomLevel = 1;
+
+function runHTML() {
+  document.getElementById("preview").srcdoc =
+    document.getElementById("editor").value;
+}
+
+/* ZOOM */
+function zoomIn() {
+  zoomLevel += 0.1;
+  applyZoom();
+}
+
+function zoomOut() {
+  zoomLevel = Math.max(0.3, zoomLevel - 0.1);
+  applyZoom();
+}
+
+function applyZoom() {
+  document.getElementById("preview").style.transform =
+    `scale(${zoomLevel})`;
+}
+
+/* FULLSCREEN API (STABIL) */
+function toggleFullscreen() {
+  const el = document.getElementById("previewWrapper");
+  if (!document.fullscreenElement) {
+    el.requestFullscreen();
+  } else {
+    document.exitFullscreen();
+  }
+}
+
+/* Browser handle ESC otomatis */
+document.addEventListener("fullscreenchange", () => {});
+</script>
+
+</body>
+</html>
