@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HTML Live Viewer</title>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=JetBrains+Mono:wght@300;400;600&display=swap');
+
+*{
+  margin:0; padding:0; box-sizing:border-box;
+}
+
+body{
+  background:#0b0f1a;
+  color:white;
+  font-family:'Inter',sans-serif;
+  height:100vh;
+  overflow:hidden;
+}
+
+/* HEADER */
+.header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:12px 20px;
+  background:#0b0f1a;
+  border-bottom:1px solid rgba(0,255,255,.3);
+}
+
+.logo{
+  font-weight:600;
+  color:#0affff;
+}
+
+/* CONTAINER SPLIT */
+.container{
+  display:flex;
+  height:calc(100vh - 50px);
+}
+
+/* EDITOR */
+.editor-wrapper{
+  width:50%;
+  background:#05070f;
+  border-right:1px solid rgba(0,255,255,.3);
+  display:flex;
+  flex-direction:column;
+}
+
+.toolbar{
+  padding:8px 12px;
+  background:#0b0f1a;
+  border-bottom:1px solid rgba(0,255,255,.2);
+  display:flex;
+  gap:10px;
+}
+
+.btn{
+  padding:6px 12px;
+  border:1px solid #0affff;
+  background:transparent;
+  color:#0affff;
+  border-radius:6px;
+  cursor:pointer;
+  transition:.3s;
+}
+
+.btn:hover{
+  background:#0affff;
+  color:#05070f;
+}
+
+/* EDITOR AREA */
+textarea{
+  flex:1;
+  width:100%;
+  background:#05070f;
+  color:#b3ffff;
+  border:none;
+  padding:15px;
+  font-family:'JetBrains Mono', monospace;
+  font-size:14px;
+  outline:none;
+  resize:none;
+}
+
+/* PREVIEW */
+.preview-wrapper{
+  width:50%;
+  background:white;
+}
+
+iframe{
+  width:100%;
+  height:100%;
+  border:none;
+}
+
+/* RESIZER */
+.resizer{
+  width:6px;
+  cursor:col-resize;
+  background:rgba(0,255,255,.3);
+}
+
+/* FULLSCREEN */
+.fullscreen{
+  position:fixed !important;
+  top:0; left:0;
+  width:100vw !important;
+  height:100vh !important;
+  z-index:9999;
+}
+
+/* FLOATING MINI EDITOR */
+#miniEditorBox{
+  position:fixed;
+  bottom:20px;
+  right:20px;
+  width:300px;
+  height:200px;
+  background:rgba(5,7,15,.95);
+  border:1px solid rgba(0,255,255,.5);
+  border-radius:12px;
+  display:none;
+  flex-direction:column;
+  z-index:10000;
+  box-shadow:0 0 15px rgba(0,255,255,.3);
+}
+
+#miniEditorHeader{
+  padding:8px;
+  background:#0b0f1a;
+  color:#0affff;
+  cursor:move;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+#miniEditor{
+  flex:1;
+  width:100%;
+  background:#05070f;
+  color:#b3ffff;
+  border:none;
+  padding:10px;
+  font-family:'JetBrains Mono', monospace;
+  font-size:12px;
+}
+
+/* CONTAINER TOMBOL FLOATING (BARU) */
+#miniFloatingWrapper{
+  position:fixed;
+  bottom:20px;
+  right:20px;
+  display:none;
+  align-items:center;
+  gap:6px;
+  z-index:10001;
+}
+
+/* TOMBOL KECIL SHOW MINI EDITOR (DRAGGABLE) */
+#miniToggleFloating{
+  padding:6px 10px;
+  background:#0b0f1a;
+  color:#0affff;
+  border:1px solid #0affff;
+  border-radius:8px;
+  cursor:move;
+  font-size:12px;
+}
+
+/* TOMBOL HIDE PERMANEN (BARU) */
+#miniHidePermanent{
+  padding:6px 10px;
+  background:#0b0f1a;
+  color:#ff4f4f;
+  border:1px solid #ff4f4f;
+  border-radius:8px;
+  cursor:pointer;
+  font-size:12px;
+}
+
+/* RESPONSIVE */
+@media(max-width:900px){
+  .container{
+    flex-direction:column;
+  }
+  .editor-wrapper, .preview-wrapper{
+    width:100%;
+    height:50%;
+  }
+  .resizer{
+    height:6px;
+    width:100%;
+    cursor:row-resize;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+  <div class="logo">HTML Live Viewer</div>
+</div>
+
+<div class="container">
+  <div class="editor-wrapper" id="editorPane">
+    <div class="toolbar">
+      <button class="btn" onclick="toggleFullscreen('editor')" id="fsEditorBtn">
+        Fullscreen Editor (tekan Esc untuk Exit)
+      </button>
+      <button class="btn" onclick="toggleFullscreen('preview')" id="fsPreviewBtn">
+        Fullscreen Preview (tekan Esc untuk Exit)
+      </button>
+      <button class="btn" onclick="toggleMiniEditor()" id="miniToggleBtn" style="display:none;">
+        Hide Mini Editor
+      </button>
+    </div>
+    <textarea id="editor">
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+body{
+  background:#05070f;
+  color:#0affff;
+  font-family:Arial;
+}
+h1{
+  text-align:center;
+}
+</style>
+</head>
+<body>
+<h1>Hello Live Preview</h1>
+<p>Edit HTML di kiri, lihat hasilnya di kanan.</p>
+</body>
+</html>
+    </textarea>
+  </div>
+
+  <div class="resizer" id="dragbar"></div>
+
+  <div class="preview-wrapper" id="previewPane">
+    <iframe id="preview"></iframe>
+  </div>
+</div>
+
+<!-- FLOATING MINI EDITOR -->
+<div id="miniEditorBox">
+  <div id="miniEditorHeader">
+    <span>Mini Editor</span>
+    <div>
+      <button class="btn" onclick="toggleMiniEditor()">Show/Hide</button>
+      <button class="btn" onclick="resizeMiniEditor(1.2)">+</button>
+      <button class="btn" onclick="resizeMiniEditor(0.8)">-</button>
+    </div>
+  </div>
+  <textarea id="miniEditor"></textarea>
+</div>
+
+<!-- FLOATING BUTTON WRAPPER (BARU) -->
+<div id="miniFloatingWrapper">
+  <div id="miniToggleFloating">Show Mini Editor</div>
+  <div id="miniHidePermanent">✕</div>
+</div>
+
+<script>
+const editor = document.getElementById("editor");
+const miniEditor = document.getElementById("miniEditor");
+const preview = document.getElementById("preview");
+
+function syncEditors(source){
+  if(source === "main"){
+    miniEditor.value = editor.value;
+  } else {
+    editor.value = miniEditor.value;
+  }
+  preview.srcdoc = editor.value;
+}
+
+let timeout;
+editor.addEventListener("input", () => {
+  clearTimeout(timeout);
+  timeout = setTimeout(() => syncEditors("main"), 150);
+});
+
+miniEditor.addEventListener("input", () => {
+  clearTimeout(timeout);
+  timeout = setTimeout(() => syncEditors("mini"), 150);
+});
+
+preview.srcdoc = editor.value;
+
+// === FULLSCREEN TOGGLE ===
+function toggleFullscreen(target){
+  const editorPane = document.getElementById("editorPane");
+  const previewPane = document.getElementById("previewPane");
+  const miniBox = document.getElementById("miniEditorBox");
+  const miniToggle = document.getElementById("miniToggleBtn");
+  const miniWrapper = document.getElementById("miniFloatingWrapper");
+
+  if(target === "editor"){
+    editorPane.classList.toggle("fullscreen");
+    previewPane.classList.remove("fullscreen");
+  } else {
+    previewPane.classList.toggle("fullscreen");
+    editorPane.classList.remove("fullscreen");
+  }
+
+  const isFullscreen = editorPane.classList.contains("fullscreen") ||
+                       previewPane.classList.contains("fullscreen");
+
+  if(isFullscreen){
+    miniBox.style.display = "flex";
+    miniToggle.style.display = "inline-block";
+    miniToggle.textContent = "Hide Mini Editor";
+    miniWrapper.style.display = "none";
+  } else {
+    miniBox.style.display = "none";
+    miniToggle.style.display = "none";
+    miniWrapper.style.display = "none";
+  }
+}
+
+// === ESC EXIT ===
+document.addEventListener("keydown", (e) => {
+  if(e.key === "Escape"){
+    document.getElementById("editorPane").classList.remove("fullscreen");
+    document.getElementById("previewPane").classList.remove("fullscreen");
+    document.getElementById("miniEditorBox").style.display = "none";
+    document.getElementById("miniToggleBtn").style.display = "none";
+    document.getElementById("miniFloatingWrapper").style.display = "none";
+  }
+});
+
+// === TOGGLE MINI EDITOR (SHOW/HIDE) ===
+function toggleMiniEditor(){
+  const box = document.getElementById("miniEditorBox");
+  const btn = document.getElementById("miniToggleBtn");
+  const wrapper = document.getElementById("miniFloatingWrapper");
+
+  if(box.style.display === "none"){
+    box.style.display = "flex";
+    btn.textContent = "Hide Mini Editor";
+    wrapper.style.display = "none";
+  } else {
+    box.style.display = "none";
+    btn.textContent = "Show Mini Editor";
+    wrapper.style.display = "flex";
+  }
+}
+
+// === KLIK SHOW MINI EDITOR ===
+document.getElementById("miniToggleFloating").addEventListener("click", () => {
+  document.getElementById("miniEditorBox").style.display = "flex";
+  document.getElementById("miniFloatingWrapper").style.display = "none";
+});
+
+// === KLIK HIDE PERMANEN (BARU) ===
+document.getElementById("miniHidePermanent").addEventListener("click", () => {
+  document.getElementById("miniEditorBox").style.display = "none";
+  document.getElementById("miniFloatingWrapper").style.display = "none";
+});
+
+// === DRAG TOMBOL KECIL ===
+const miniFloating = document.getElementById("miniToggleFloating");
+let fx=0, fy=0, fdrag=false;
+
+miniFloating.addEventListener("mousedown", (e)=>{
+  fdrag = true;
+  fx = e.clientX - miniFloating.offsetLeft;
+  fy = e.clientY - miniFloating.offsetTop;
+});
+
+document.addEventListener("mousemove", (e)=>{
+  if(!fdrag) return;
+  miniFloating.style.left = (e.clientX - fx) + "px";
+  miniFloating.style.top = (e.clientY - fy) + "px";
+});
+
+document.addEventListener("mouseup", ()=> fdrag=false);
+
+// === RESIZE MINI EDITOR ===
+function resizeMiniEditor(scale){
+  const box = document.getElementById("miniEditorBox");
+  const w = box.offsetWidth * scale;
+  const h = box.offsetHeight * scale;
+  box.style.width = Math.min(Math.max(w, 200), 600) + "px";
+  box.style.height = Math.min(Math.max(h, 150), 400) + "px";
+}
+
+// === DRAG MINI EDITOR (BOUNDED) ===
+const miniBox = document.getElementById("miniEditorBox");
+const miniHeader = document.getElementById("miniEditorHeader");
+let offsetX=0, offsetY=0, dragging=false;
+
+miniHeader.addEventListener("mousedown", (e)=>{
+  dragging = true;
+  offsetX = e.clientX - miniBox.offsetLeft;
+  offsetY = e.clientY - miniBox.offsetTop;
+});
+
+document.addEventListener("mousemove", (e)=>{
+  if(!dragging) return;
+
+  let x = e.clientX - offsetX;
+  let y = e.clientY - offsetY;
+
+  const maxX = window.innerWidth - miniBox.offsetWidth;
+  const maxY = window.innerHeight - miniBox.offsetHeight;
+
+  x = Math.max(0, Math.min(x, maxX));
+  y = Math.max(0, Math.min(y, maxY));
+
+  miniBox.style.left = x + "px";
+  miniBox.style.top = y + "px";
+});
+
+document.addEventListener("mouseup", ()=> dragging=false);
+
+// === RESIZER DRAG (TETAP ADA) ===
+const resizer = document.getElementById("dragbar");
+const editorPane = document.getElementById("editorPane");
+const previewPane = document.getElementById("previewPane");
+
+let isDragging = false;
+
+resizer.addEventListener("mousedown", () => isDragging = true);
+document.addEventListener("mouseup", () => isDragging = false);
+
+document.addEventListener("mousemove", (e) => {
+  if(!isDragging) return;
+
+  const container = document.querySelector(".container");
+  const rect = container.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const percent = (x / rect.width) * 100;
+
+  editorPane.style.width = percent + "%";
+  previewPane.style.width = (100 - percent) + "%";
+});
+</script>
+
+</body>
+</html>
